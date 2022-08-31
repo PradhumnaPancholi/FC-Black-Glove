@@ -14,7 +14,7 @@ describe("BlackGlove Public Mint Tests", function() {
   let nonWhitelisted: any
   //--------------------------------------------------------------------------------------------------//
   // Setup/Deployment//
-  beforeEach(async function(){
+  before(async function(){
     // get accounts (10) for test suit
     let accounts:any = await ethers.getSigners()
     // take first five addresses for whitelist//
@@ -36,8 +36,8 @@ describe("BlackGlove Public Mint Tests", function() {
   })
   
   it("A whitelisted address can mint the BlackGlove", async () => {
-    const merkleproof = merkletree.getHexProof(whitelisted[0].addresses)
-    await expect(blackglove.mint(merkleproof)).to.not.be.rejected
+    const merkleproof = await merkletree.getHexProof(whitelisted[0].address)
+    await blackglove.connect(whitelisted[0]).mint(merkleproof)
   })
 })
 
