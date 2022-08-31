@@ -26,17 +26,19 @@ contract BlackGlove is ERC721Enumerable, Ownable{
 
     mapping(address => uint256) public addressMintedBalance;
 
+    //For root hash of the merkle tree that stores whitelist address 
     bytes32 public root;
+
+    //For tracking claimed addresses from whitelist//
+    mapping(address => bool) public claimed;
 
     uint256 public constant duration = 86400;
     uint256 public immutable end;
 
     constructor(
         bytes32 _root,
-        string memory _name,
-        string memory _symbol,
         string memory _initBaseURI
-    ) ERC721 (_name, _symbol) {
+    ) ERC721 ("Fight Club Black Glove", "FGBG") {
         root = _root;
         setBaseURI(_initBaseURI);
         end = block.timestamp + duration;
@@ -48,7 +50,7 @@ contract BlackGlove is ERC721Enumerable, Ownable{
     }
 
     function isValid(bytes32[] memory proof, bytes32 leaf) public view returns(bool) {
-        return MerkleProof.verify(proof, root, leaf);
+        return MerkleProof.verify(proof, root , leaf);
     }
 
     ///@dev create tokens of token type `id` and assigns them to `to`

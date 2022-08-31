@@ -1,10 +1,13 @@
 import { ethers } from "hardhat";
+import {createWhitelist} from "./whitelist";
 
 async function main() {
 
+  const whitelistRoot = await createWhitelist()
+  console.log('whitelistRoot', whitelistRoot)
 
   const BlackGlove = await ethers.getContractFactory("BlackGlove");
-  const blackglove = await Lock.deploy();
+  const blackglove = await BlackGlove.deploy(whitelistRoot, "https.dummy-url");
 
   await blackglove.deployed();
 
