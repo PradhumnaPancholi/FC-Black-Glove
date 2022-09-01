@@ -1,6 +1,6 @@
 const { MerkleTree } = require("merkletreejs");
 const keccak256 = require("keccak256");
-
+//ToDo: Need to update with padBuffer//
 export function createWhitelist() {
 
   console.log("This is Merkletree for whitelist")

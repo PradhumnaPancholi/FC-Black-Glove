@@ -13,7 +13,7 @@ contract BlackGlove is ERC721Enumerable, Ownable{
     using Strings for uint256;
 
     /// @notice to keep track of token ids
-    Counters.Counter private tokenId;
+    Counters.Counter private _tokenIds;
 
     /// @notice discounted cost for NFT in MATIC//
     uint16 public discountedPrice = 600;
@@ -39,6 +39,8 @@ contract BlackGlove is ERC721Enumerable, Ownable{
     //For root hash of the merkle tree that stores whitelist address 
     bytes32 public root;
 
+    /// @notice list of holders//
+    mapping(address => uint256) public holders;
     //For tracking claimed addresses from whitelist//
     mapping(address => bool) public claimed;
 
@@ -72,6 +74,15 @@ contract BlackGlove is ERC721Enumerable, Ownable{
 
     function mint(bytes32[] calldata proof) public payable {
         require(!paused, "Black Glove is paused");
+        //ToDo: check if msg.sender already have an nft. No wallet can mint more than 1
+        require(holders[msg.sender] == 0, "A wallet can not mint more than 1 Black Glove");
+        // if not, add addr to the holders list with token id//
+        // the logic will be required for _safeMint too. Hence, performing it here is optimization
+         // ToDo: increment token id//
+        _tokenIds.increment();
+        uint256 id = _tokenIds.current();
+        holders[msg.sender] == id;
+        //check if totalSupply is reached//
         uint256 supply = totalSupply();
         require ( supply + 1 <= maxSupply, "Max NFT Limit exceeded");
         // check if the merkle proof is valid //
@@ -80,7 +91,12 @@ contract BlackGlove is ERC721Enumerable, Ownable{
         // if the caller is a whitelisted address and under discoount duration, then set cost to 600 MATIC //
         // otherwise 650 MATIC //
         uint16 cost = whitelisted && block.timestamp < end ? discountedPrice : price;
-        // ToDo:  perform tranferFrom//
+       
+        // ToDo:  perform tranferFrom on required token//
+
+        // safemint and transfer//
+        _safeMint(msg.sender, id);
+        //ToDo: need to set uri//
 
 
 //       if (msg.sender != owner()) {

@@ -40,9 +40,12 @@ describe("BlackGlove Public Mint Tests", function() {
   })
   
   it("A whitelisted address can mint the BlackGlove", async () => {
+    
+    expect( await blackglove.totalSupply()).to.equal(0);
     const merkleproof = await merkletree.getHexProof(padBuffer(whitelisted[0].address))
     // ToDo: Need to create and expect and test for "Transfer" event "
-    await blackglove.connect(whitelisted[0]).mint(merkleproof)
+    await expect (blackglove.connect(whitelisted[0]).mint(merkleproof)).to.emit(blackglove, "Transfer");
+    expect( await blackglove.totalSupply()).to.equal(1);
   })
 
   it("A non-whitelisted address can not mint the BlackGlove", async () => {
