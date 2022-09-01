@@ -4,12 +4,22 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
-///@title Contract to deploy BlackGlove to OpenSea
+///@title Fight Club's Black Glove
 
 contract BlackGlove is ERC721Enumerable, Ownable{
-   using Strings for uint256;
+    using Counters for Counters.Counter;
+    using Strings for uint256;
 
+    /// @notice to keep track of token ids
+    Counters.Counter private tokenId;
+
+    /// @notice discounted cost for NFT in MATIC//
+    uint16 public discountedPrice = 600;
+
+    /// @notice regular cost for NFT in MATIC//
+    uint16 public price = 650;
 
     //URI to read metadata of images to be deployed
     string public baseURI;
@@ -53,28 +63,37 @@ contract BlackGlove is ERC721Enumerable, Ownable{
         return MerkleProof.verify(proof, root , leaf);
     }
 
+    function toBytes32(address addr) pure internal returns (bytes32) {
+       return bytes32(uint256(uint160(addr))); 
+    }
+
     ///@dev create tokens of token type `id` and assigns them to `to`
     /// `to` cannot be a zero address
 
-    function mint(bytes32[] memory proof) public payable {
-       require(!paused, "Black Glove is paused");
+    function mint(bytes32[] calldata proof) public payable {
+        require(!paused, "Black Glove is paused");
         uint256 supply = totalSupply();
-       require ( supply + 1 <= maxSupply, "Max NFT Limit exceeded");
-       bool whitelistedMint = isValid(proof, bytes32(uint256(uint160(msg.sender)) << 96));
-       require( whitelistedMint || block.timestamp >= end, "Invalid mint");
-        uint cost = whitelistedMint ? 600 ether : 650 ether;
+        require ( supply + 1 <= maxSupply, "Max NFT Limit exceeded");
+        // check if the merkle proof is valid //
+        bool whitelisted = MerkleProof.verify(proof, root, toBytes32(msg.sender)) == true;
+        require(whitelisted, "Invalid merkle proof");
+        // if the caller is a whitelisted address and under discoount duration, then set cost to 600 MATIC //
+        // otherwise 650 MATIC //
+        uint16 cost = whitelisted && block.timestamp < end ? discountedPrice : price;
+        // ToDo:  perform tranferFrom//
 
-       if (msg.sender != owner()) {
-            uint256 ownerMintedCount = addressMintedBalance[msg.sender];
-            require(ownerMintedCount == 0, "Already minted");
-            addressMintedBalance[msg.sender]++;
-            require(msg.value >= cost, "Insufficient funds");
-       }
 
-        _safeMint(msg.sender, supply++);
-
-       (bool success, ) = payable(commissions).call{value: msg.value * 10 /100}("");
-       require (success);
+//       if (msg.sender != owner()) {
+//            uint256 ownerMintedCount = addressMintedBalance[msg.sender];
+//            require(ownerMintedCount == 0, "Already minted");
+//            addressMintedBalance[msg.sender]++;
+//            require(msg.value >= cost, "Insufficient funds");
+//       }
+//
+//        _safeMint(msg.sender, supply++);
+//
+//       (bool success, ) = payable(commissions).call{value: msg.value * 10 /100}("");
+ //      require (success);
     }
     
 
