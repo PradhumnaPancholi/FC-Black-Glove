@@ -38,7 +38,7 @@ describe("BlackGlove Public Mint Tests", function() {
     const BlackGlove = await ethers.getContractFactory("BlackGlove")
     blackglove = await BlackGlove.deploy(rootHash, "dummy-uri")
   })
-  
+ //ToDo: Need to refactor as whitelist can mint at discounted price under dealine// 
   it("A whitelisted address can mint the BlackGlove", async () => {
     
     expect( await blackglove.totalSupply()).to.equal(0);

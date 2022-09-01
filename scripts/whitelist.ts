@@ -1,8 +1,11 @@
 const { MerkleTree } = require("merkletreejs");
 const keccak256 = require("keccak256");
-//ToDo: Need to update with padBuffer//
-export function createWhitelist() {
 
+export function createWhitelist() {
+  //function ro process addresses for leaf nodes //
+  const padBuffer = (addr: any) => {
+    return Buffer.from(addr.substr(2).padStart(32*2, 0), 'hex')
+  }
   console.log("This is Merkletree for whitelist")
 
   let whitelistAddresses = [
@@ -37,7 +40,7 @@ export function createWhitelist() {
     "0x4DF83971f6f1bFD8D33a2E79584bDFDe75F4DF60",
   ];
 
-  const leaves = whitelistAddresses.map(addr => keccak256(addr))
+  const leaves = whitelistAddresses.map(addr => padBuffer(addr))
   const merkletree = new MerkleTree(leaves, keccak256, {sortPairs: true})
   console.log("merkletree", merkletree.toString())
   const rootHash = merkletree.getHexRoot()
