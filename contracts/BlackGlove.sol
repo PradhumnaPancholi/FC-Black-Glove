@@ -15,6 +15,9 @@ contract BlackGlove is ERC721Enumerable, Ownable{
     /// @notice to keep track of token ids
     Counters.Counter private _tokenIds;
 
+    ///@notice Address for MATIC token to create interface
+    address public immutable MATIC;
+
     /// @notice discounted cost for NFT in MATIC//
     uint16 public discountedPrice = 600;
 
@@ -49,11 +52,14 @@ contract BlackGlove is ERC721Enumerable, Ownable{
 
     constructor(
         bytes32 _root,
-        string memory _initBaseURI
+        string memory _initBaseURI,
+        address _tokenAddress
     ) ERC721 ("Fight Club Black Glove", "FGBG") {
         root = _root;
         setBaseURI(_initBaseURI);
         end = block.timestamp + duration;
+        // set address for MATIC token //
+        MATIC = _tokenAddress;
     }
 
     // URI which contains  created images like a PINATA CID

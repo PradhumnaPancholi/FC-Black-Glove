@@ -19,6 +19,17 @@ describe("BlackGlove Public Mint Tests", function() {
   //--------------------------------------------------------------------------------------------------//
   // Setup/Deployment//
   before(async function(){
+
+    //--------------------------------------//
+    //----------Mock MATIC------------------//
+    //--------------------------------------//
+    console.log("Deploying Mock Matic ERC-20 token")
+    const MockMatic = await ethers.getContractFactory("MockMatic")
+    const mockMatic = await MockMatic.deploy()
+    console.log("Mock MATIC deployed at: ", mockMatic.address)
+    //-------------------------------------//
+    // ---------Whitelist-----------------//
+    // -----------------------------------//
     // get accounts (10) for test suit
     let accounts:any = await ethers.getSigners()
     // take first five addresses for whitelist//
@@ -33,10 +44,13 @@ describe("BlackGlove Public Mint Tests", function() {
     //create MerkleTree for whitelisted addresses 
     merkletree = new MerkleTree(leaves, keccak256, {sortPairs: true})
     const rootHash = await merkletree.getHexRoot()
+    //-----------------------------------------//
+    //---------BlackGlove----------------------//
+    //-----------------------------------------//
     //deploy the contract with root hash for whitelisted MerkleTree
     console.log("Deploying BlackGlove with root hash :", rootHash)
     const BlackGlove = await ethers.getContractFactory("BlackGlove")
-    blackglove = await BlackGlove.deploy(rootHash, "dummy-uri")
+    blackglove = await BlackGlove.deploy(rootHash, "dummy-uri", mockMatic.address)
   })
  //ToDo: Need to refactor as whitelist can mint at discounted price under dealine// 
   it("A whitelisted address can mint the BlackGlove", async () => {
