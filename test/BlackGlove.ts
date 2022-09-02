@@ -27,11 +27,17 @@ describe("BlackGlove Public Mint Tests", function() {
     const MockMatic = await ethers.getContractFactory("MockMatic")
     const mockMatic = await MockMatic.deploy()
     console.log("Mock MATIC deployed at: ", mockMatic.address)
+    // get accounts (10) for test suit
+    let accounts:any = await ethers.getSigners()
+    //distribute mock token to test accounts //
+    console.log("Sending 2000 Mock Matic to each test account.....")
+    accounts.forEach(async function(account:any) {
+        mockMatic.transfer(account.address, 2000)
+        console.log(await mockMatic.balanceOf(account.address))
+    })
     //-------------------------------------//
     // ---------Whitelist-----------------//
     // -----------------------------------//
-    // get accounts (10) for test suit
-    let accounts:any = await ethers.getSigners()
     // take first five addresses for whitelist//
     whitelisted = accounts.slice(0, 5)
     // the next five addresses for non-whitelisted accounts
