@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 ///@title Fight Club's Black Glove
 
@@ -15,8 +16,8 @@ contract BlackGlove is ERC721Enumerable, Ownable{
     /// @notice to keep track of token ids
     Counters.Counter private _tokenIds;
 
-    ///@notice Address for MATIC token to create interface
-    address public immutable MATIC;
+    ///@notice For MATIC token interface
+    IERC20 MATIC;
 
     /// @notice discounted cost for NFT in MATIC//
     uint16 public discountedPrice = 600;
@@ -54,12 +55,12 @@ contract BlackGlove is ERC721Enumerable, Ownable{
         bytes32 _root,
         string memory _initBaseURI,
         address _tokenAddress
-    ) ERC721 ("Fight Club Black Glove", "FGBG") {
+    ) ERC721 ("Fight Club Black Glove", "FCBG") {
         root = _root;
         setBaseURI(_initBaseURI);
         end = block.timestamp + duration;
         // set address for MATIC token //
-        MATIC = _tokenAddress;
+        MATIC = IERC20(_tokenAddress);
     }
 
     // URI which contains  created images like a PINATA CID
@@ -80,11 +81,10 @@ contract BlackGlove is ERC721Enumerable, Ownable{
 
     function mint(bytes32[] calldata proof) public payable {
         require(!paused, "Black Glove is paused");
-        //ToDo: check if msg.sender already have an nft. No wallet can mint more than 1
         require(holders[msg.sender] == 0, "A wallet can not mint more than 1 Black Glove");
+        holders[msg.sender] = 1;
         // if not, add addr to the holders list with token id//
         // the logic will be required for _safeMint too. Hence, performing it here is optimization
-         // ToDo: increment token id//
         _tokenIds.increment();
         uint256 id = _tokenIds.current();
         holders[msg.sender] == id;
@@ -93,13 +93,10 @@ contract BlackGlove is ERC721Enumerable, Ownable{
         require ( supply + 1 <= maxSupply, "Max NFT Limit exceeded");
         // check if the merkle proof is valid //
         bool whitelisted = MerkleProof.verify(proof, root, toBytes32(msg.sender)) == true;
-        require(whitelisted, "Invalid merkle proof");
         // if the caller is a whitelisted address and under discoount duration, then set cost to 600 MATIC //
         // otherwise 650 MATIC //
-        uint16 cost = whitelisted && block.timestamp < end ? discountedPrice : price;
-       
-        // ToDo:  perform tranferFrom on required token//
-
+        uint16 cost = whitelisted && block.timestamp < end ? discountedPrice : price; 
+        require(IERC20(MATIC).transferFrom(msg.sender, address(this), cost), "MATIC transfer failed"); 
         // safemint and transfer//
         _safeMint(msg.sender, id);
         //ToDo: need to set uri//
@@ -116,7 +113,7 @@ contract BlackGlove is ERC721Enumerable, Ownable{
 //
 //       (bool success, ) = payable(commissions).call{value: msg.value * 10 /100}("");
  //      require (success);
-    }
+}
     
 
     //Access Control Function 
