@@ -100,18 +100,6 @@ contract BlackGlove is ERC721URIStorage, Ownable{
 }
     
 
-    //Access Control Function 
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-        require(
-            _exists(tokenId), "ERC721metadata: URI query for nonexistent token"
-        ); 
-        string memory currentBaseURI = TOKEN_URI;
-        return bytes(currentBaseURI).length > 0
-        ? string(abi.encodePacked(currentBaseURI))
-        : "";
-
-    } 
-
     function pause() public onlyOwner {
         paused = true;
     }
