@@ -1,7 +1,7 @@
 //SPDX-License-Identifier:MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -9,11 +9,11 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 ///@title Fight Club's Black Glove
 
-contract BlackGlove is ERC721Enumerable, Ownable{
+contract BlackGlove is ERC721URIStorage, Ownable{
     using Counters for Counters.Counter;
     using Strings for uint256;
 
-    /// @notice to keep track of token ids
+    /// @notice To keep track of token ids
     Counters.Counter private _tokenIds;
 
     ///@notice For MATIC token interface
@@ -26,25 +26,25 @@ contract BlackGlove is ERC721Enumerable, Ownable{
     uint16 public price = 650;
 
     //URI to read metadata of images to be deployed
-    string public baseURI;
+    string constant public TOKEN_URI = "ipfs://QmWPhrAFNjS3JkyEMZSKe4zWGSjXHncUyFiJiSDWyU3qnW";
 
-    //file extension to be contained in URI
-    string public baseExtension = ".json";
+    ///@notice Maximum supply of NFTs 
+    uint16 constant public MAX_SUPPLY = 1000;
 
-    //maximum supply of NFTs 
-    uint256 public maxSupply = 1000;
-
-
+    ///@notice For managing "Pause" state //
     bool public paused = false;
+
+    //ToDo: Need to update for FC//
     address payable commissions = payable(0x3Eb231C0513eE1F07306c2919FF5F9Ee9308407F);
+    
 
-    mapping(address => uint256) public addressMintedBalance;
-
-    //For root hash of the merkle tree that stores whitelist address 
+    ///@notice For root hash of the merkle tree that stores whitelist address 
     bytes32 public root;
 
-    /// @notice list of holders//
+    ///@notice List of holders//
     mapping(address => uint256) public holders;
+
+    //ToDO : need to work on this //
     //For tracking claimed addresses from whitelist//
     mapping(address => bool) public claimed;
 
@@ -53,25 +53,19 @@ contract BlackGlove is ERC721Enumerable, Ownable{
 
     constructor(
         bytes32 _root,
-        string memory _initBaseURI,
         address _tokenAddress
     ) ERC721 ("Fight Club Black Glove", "FCBG") {
         root = _root;
-        setBaseURI(_initBaseURI);
         end = block.timestamp + duration;
         // set address for MATIC token //
         MATIC = IERC20(_tokenAddress);
     }
 
-    // URI which contains  created images like a PINATA CID
-    function _baseURI() internal view virtual override returns(string memory) {
-        return baseURI;
-    }
 
-    function isValid(bytes32[] memory proof, bytes32 leaf) public view returns(bool) {
-        return MerkleProof.verify(proof, root , leaf);
-    }
 
+
+
+    ///@notice A unitly function to convert address into bytes32 to verify merkle proof//
     function toBytes32(address addr) pure internal returns (bytes32) {
        return bytes32(uint256(uint160(addr))); 
     }
@@ -89,8 +83,8 @@ contract BlackGlove is ERC721Enumerable, Ownable{
         uint256 id = _tokenIds.current();
         holders[msg.sender] == id;
         //check if totalSupply is reached//
-        uint256 supply = totalSupply();
-        require ( supply + 1 <= maxSupply, "Max NFT Limit exceeded");
+        uint256 supply = _tokenIds.current();
+        require ( supply + 1 <= MAX_SUPPLY, "Max NFT Limit exceeded");
         // check if the merkle proof is valid //
         bool whitelisted = MerkleProof.verify(proof, root, toBytes32(msg.sender)) == true;
         // if the caller is a whitelisted address and under discoount duration, then set cost to 600 MATIC //
@@ -99,19 +93,9 @@ contract BlackGlove is ERC721Enumerable, Ownable{
         require(IERC20(MATIC).transferFrom(msg.sender, address(this), cost), "MATIC transfer failed"); 
         // safemint and transfer//
         _safeMint(msg.sender, id);
-        //ToDo: need to set uri//
+        _setTokenURI(id, TOKEN_URI);
 
-
-//       if (msg.sender != owner()) {
-//            uint256 ownerMintedCount = addressMintedBalance[msg.sender];
-//            require(ownerMintedCount == 0, "Already minted");
-//            addressMintedBalance[msg.sender]++;
-//            require(msg.value >= cost, "Insufficient funds");
-//       }
-//
-//        _safeMint(msg.sender, supply++);
-//
-//       (bool success, ) = payable(commissions).call{value: msg.value * 10 /100}("");
+///       (bool success, ) = payable(commissions).call{value: msg.value * 10 /100}("");
  //      require (success);
 }
     
@@ -121,22 +105,12 @@ contract BlackGlove is ERC721Enumerable, Ownable{
         require(
             _exists(tokenId), "ERC721metadata: URI query for nonexistent token"
         ); 
-        string memory currentBaseURI = _baseURI();
+        string memory currentBaseURI = TOKEN_URI;
         return bytes(currentBaseURI).length > 0
         ? string(abi.encodePacked(currentBaseURI))
         : "";
 
-    }
-
-    //Only Owner Functions
-
-    function setBaseURI(string memory _newBaseURI) public onlyOwner {
-        baseURI = _newBaseURI;
-    }
-
-    function setBaseExtension(string memory _newBaseExtension) public onlyOwner {
-        baseExtension = _newBaseExtension;
-    }
+    } 
 
     function pause() public onlyOwner {
         paused = true;

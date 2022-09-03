@@ -7,7 +7,7 @@ async function main() {
   console.log('whitelistRoot', whitelistRoot)
 
   const BlackGlove = await ethers.getContractFactory("BlackGlove");
-  const blackglove = await BlackGlove.deploy(whitelistRoot, "https.dummy-url", "0x0000000000000000000000000000000000001010");
+  const blackglove = await BlackGlove.deploy(whitelistRoot, "0x0000000000000000000000000000000000001010");
 
   await blackglove.deployed();
 

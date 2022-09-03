@@ -56,10 +56,11 @@ describe("BlackGlove Public Mint Tests", function() {
     //deploy the contract with root hash for whitelisted MerkleTree
     console.log("Deploying BlackGlove with root hash :", rootHash)
     const BlackGlove = await ethers.getContractFactory("BlackGlove")
-    blackglove = await BlackGlove.deploy(rootHash, "dummy-uri", mockMatic.address)
+    blackglove = await BlackGlove.deploy(rootHash, mockMatic.address)
   })
   it("A whitelisted address can mint the BlackGlove with a discount within the discount period", async () => { 
     const merkleproof = await merkletree.getHexProof(padBuffer(whitelisted[0].address))
+    console.log("merkle proof", merkleproof)
     await mockMatic.approve(blackglove.address, 600);
     // ToDo: Need to create and expect and test for "Transfer" event "
     await expect (blackglove.connect(whitelisted[0]).mint(merkleproof)).to.emit(blackglove, "Transfer");
@@ -78,6 +79,9 @@ describe("BlackGlove Public Mint Tests", function() {
     const merkleproof = await merkletree.getHexProof(padBuffer(whitelisted[0].address))
     await mockMatic.connect(whitelisted[0]).approve(blackglove.address, 600)
     await expect(blackglove.connect(whitelisted[0]).mint(merkleproof)).to.be.revertedWith("A wallet can not mint more than 1 Black Glove")
+  })
+  it("Minted NFT have the correct URI", async () => {
+    expect(await blackglove.tokenURI(1)).to.be.equal(await blackglove.TOKEN_URI())
   })
   //non whitelisted address can not mint at discount price with a valid proof of whitelisted address
   // whitelisted can not mint again//
