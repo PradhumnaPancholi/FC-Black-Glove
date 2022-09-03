@@ -11,6 +11,7 @@ describe("BlackGlove Public Mint Tests", function() {
   let blackglove: Contract
   let mockMatic: Contract
   let merkletree: any  
+  let owner:  any
   let whitelisted: any 
   let nonWhitelisted: any
   //function ro process addresses for leaf nodes //
@@ -80,17 +81,33 @@ describe("BlackGlove Public Mint Tests", function() {
     await mockMatic.connect(whitelisted[0]).approve(blackglove.address, 600)
     await expect(blackglove.connect(whitelisted[0]).mint(merkleproof)).to.be.revertedWith("A wallet can not mint more than 1 Black Glove")
   })
+  it("A non-whitelisted address can not mint again", async() => {
+    const merkleproof = await merkletree.getHexProof(padBuffer(nonWhitelisted[0].address))
+    await mockMatic.connect(nonWhitelisted[0]).approve(blackglove.address, 650)
+    await expect(blackglove.connect(nonWhitelisted[0]).mint(merkleproof)).to.be.revertedWith("A wallet can not mint more than 1 Black Glove")
+  })
   it("Minted NFT have the correct URI", async () => {
     expect(await blackglove.tokenURI(1)).to.be.equal(await blackglove.TOKEN_URI())
   })
-  //non whitelisted address can not mint at discount price with a valid proof of whitelisted address
-  // whitelisted can not mint again//
-  // non-whitelisted can not mint again//
-  // image uri//
+  it("A non-whitelisted address can not at discount rate mint with merkleproof of whitelisted address", async() => {
+    const merkleproof = await merkletree.getHexProof(padBuffer(whitelisted[0].address))
+    await mockMatic.connect(nonWhitelisted[1]).approve(blackglove.address, 600)
+    await expect(blackglove.connect(nonWhitelisted[1]).mint(merkleproof)).to.be.revertedWith("ERC20: insufficient allowance")
+  })
+  it("Owner can pause the contract", async() => {
+    await blackglove.connect(whitelisted[0]).pause()
+    const merkleproof = await merkletree.getHexProof(padBuffer(nonWhitelisted[2].address))
+    await expect(blackglove.connect(nonWhitelisted[2]).mint(merkleproof)).to.be.revertedWith("Black Glove is paused")
+  })
+
   // name//
   // symbol//
   // transfer//
   // token id increaments//
-  // can not mint more than 100//
+  // can not mint more than 1000//
+  // only owner can pause//
+  // can not be minted when contract is paused //
+  // only owner can unpause //
+  // only owner can withdraw //
 })
 
